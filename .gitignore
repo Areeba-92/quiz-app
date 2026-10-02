@@ -1,0 +1,8 @@
+.env
+backend/.env
+*:Zone.Identifier
+node_modules/
+__pycache__/
+.venv/
+data/app.db
+dist/
