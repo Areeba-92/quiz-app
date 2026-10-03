@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { parsePdfs } from '../api'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { UploadDropzone } from '../components/UploadDropzone'
 import type { ParseResponse } from '../types'
 
@@ -14,22 +15,14 @@ export function UploadScreen({ onReady }: Props) {
   const [keyFile, setKeyFile] = useState<File | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState('')
-  const [parsed, setParsed] = useState<ParseResponse | null>(null)
 
   async function build() {
     if (!quizFile) return
     setStatus('parsing')
     setError('')
     try {
-      const result = await parsePdfs(quizFile, keyFile)
-      // Straight into the quiz when the extraction is clean; stop and show the
-      // problems when it is not. SOUL.md: never hide a bad extraction.
-      if (result.warnings.length === 0) {
-        onReady(result)
-      } else {
-        setParsed(result)
-        setStatus('idle')
-      }
+      // Problems are shown on the review screen, which App opens when needed.
+      onReady(await parsePdfs(quizFile, keyFile))
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Something went wrong.')
       setStatus('failed')
@@ -38,7 +31,11 @@ export function UploadScreen({ onReady }: Props) {
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-8">
-      <h1 className="text-2xl font-semibold">Build a quiz</h1>
+      <div className="flex justify-end">
+        <ThemeToggle />
+      </div>
+      {/* The form sits a little lower than the theme switch, so the page does not feel top-heavy. */}
+      <h1 className="mt-[8vh] text-2xl font-semibold">Build a quiz</h1>
       <p className="mt-1 mb-6 text-slate-600 dark:text-slate-400">
         Upload a question PDF. Add its answer key if you have one.
       </p>
@@ -67,30 +64,6 @@ export function UploadScreen({ onReady }: Props) {
         </p>
       )}
 
-      {parsed && (
-        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-500/50 dark:bg-amber-500/10">
-          <p className="font-medium">
-            Found {parsed.question_count} questions, with {parsed.warnings.length}{' '}
-            {parsed.warnings.length === 1 ? 'problem' : 'problems'}:
-          </p>
-          <ul className="mt-2 list-disc pl-5">
-            {parsed.warnings.slice(0, 6).map((warning, index) => (
-              <li key={index}>{warning.message}</li>
-            ))}
-          </ul>
-          {parsed.pages.scanned_pages.length > 0 && (
-            <p className="mt-2">Scanned pages take longer and are not read yet.</p>
-          )}
-          <button
-            type="button"
-            onClick={() => onReady(parsed)}
-            className="mt-3 min-h-11 rounded-xl bg-indigo-600 px-4 font-medium text-white hover:bg-indigo-700"
-          >
-            Start quiz anyway
-          </button>
-        </div>
-      )}
-
       <button
         type="button"
         onClick={build}
@@ -99,6 +72,11 @@ export function UploadScreen({ onReady }: Props) {
       >
         {status === 'parsing' ? 'Reading the PDF...' : 'Build quiz'}
       </button>
+      {status === 'parsing' && (
+        <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+          Scanned pages take longer.
+        </p>
+      )}
     </main>
   )
 }

@@ -24,6 +24,8 @@ export interface PageInfo {
   total: number
   text_pages: number
   scanned_pages: number[]
+  /** Scanned pages read by AI vision. Their text may hold misreads. */
+  vision_pages: number[]
 }
 
 export interface ParseResponse {
@@ -57,6 +59,25 @@ export interface ScoreResponse {
   wrong: WrongAnswer[]
   unscored: number[]
 }
+
+export interface QuizSaved {
+  id: number
+  created_at: string
+}
+
+export interface AttemptResponse extends ScoreResponse {
+  attempt_id: number
+  quiz_id: number
+}
+
+/** OpenAI's own pick for one question, made without seeing the key. */
+export interface CheckResult {
+  ai_answer: string
+  ai_reason: string
+}
+
+/** Question number -> double-check result. A checked question's answer is locked. */
+export type Checks = Record<number, CheckResult>
 
 /** Question number -> chosen letter. Never keyed by list position. */
 export type Answers = Record<number, string>

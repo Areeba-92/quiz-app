@@ -21,7 +21,7 @@ export function parseResponse(overrides: Partial<ParseResponse> = {}): ParseResp
     question_count: questions.length,
     questions,
     warnings: [],
-    pages: { total: 1, text_pages: 1, scanned_pages: [] },
+    pages: { total: 1, text_pages: 1, scanned_pages: [], vision_pages: [] },
     ...overrides,
   }
 }

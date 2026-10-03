@@ -8,8 +8,8 @@ Purpose and values: @SOUL.md UI and UX rules: @DESIGN.md Full plan and build pha
 ## Stack
 - Frontend: React + Vite + Tailwind (`frontend/`)
 - Backend: Python FastAPI (`backend/`)
-- PDF text: PyMuPDF. Scanned pages: Claude vision.
-- AI: Claude API, called from the backend only
+- PDF text: PyMuPDF. Scanned pages: OpenAI vision.
+- AI: OpenAI API, called from the backend only. Model ID read from `OPENAI_MODEL` in `backend/.env`, never hardcoded.
 - DB: SQLite at `data/app.db`
 
 ## Environment
@@ -27,12 +27,12 @@ Purpose and values: @SOUL.md UI and UX rules: @DESIGN.md Full plan and build pha
 ## Structure
 - `backend/app/parsers/` PDF to question JSON (text path and vision path)
 - `backend/app/scoring.py` scoring and answer-key matching
-- `backend/app/ai.py` all Claude API calls
+- `backend/app/ai.py` all OpenAI API calls
 - `frontend/src/` upload, review, quiz, results screens
 - `data/samples/` sample PDFs for tests
 
 ## Rules
-- The Claude API key lives only in `backend/.env`. Never expose it to the frontend. Never commit `.env`.
+- The OpenAI API key lives only in `backend/.env`. Never expose it to the frontend. Never commit `.env`.
 - Every parser, text or vision, must return the same JSON schema (see docs/PLAN.md). Nothing downstream may depend on which parser ran.
 - Every question has `answer_source` = `key` or `ai`. Show an "AI-guessed" badge on every `ai` question, in the quiz and in results.
 - Score is shown twice: key-backed questions only, and all questions.

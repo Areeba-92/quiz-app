@@ -2,6 +2,8 @@ interface Props {
   letter: string
   text: string
   selected: boolean
+  /** After a double check the answer can no longer change. */
+  locked?: boolean
   onSelect: (letter: string) => void
 }
 
@@ -9,7 +11,7 @@ interface Props {
  * DESIGN.md: selecting highlights, it never reveals whether the choice is
  * right. Answers appear on the Results screen and nowhere else.
  */
-export function OptionButton({ letter, text, selected, onSelect }: Props) {
+export function OptionButton({ letter, text, selected, locked = false, onSelect }: Props) {
   return (
     <button
       type="button"
@@ -20,11 +22,13 @@ export function OptionButton({ letter, text, selected, onSelect }: Props) {
       // text node before joining them.
       aria-label={`Option ${letter}: ${text}`}
       onClick={() => onSelect(letter)}
+      disabled={locked}
       className={[
+        'disabled:cursor-default',
         'flex w-full min-h-11 items-start gap-3 rounded-xl border p-3 text-left transition-colors',
         selected
           ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/15'
-          : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700',
+          : 'border-slate-200 bg-white enabled:hover:border-slate-300 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:enabled:hover:border-slate-700',
       ].join(' ')}
     >
       <span
@@ -38,7 +42,7 @@ export function OptionButton({ letter, text, selected, onSelect }: Props) {
       >
         {letter}
       </span>
-      <span aria-hidden="true" className="pt-0.5">
+      <span aria-hidden="true" className="min-w-0 break-words pt-0.5">
         {text}
       </span>
     </button>

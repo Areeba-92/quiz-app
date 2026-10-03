@@ -34,6 +34,7 @@ History is a later phase and lives behind a small link on the Upload screen.
 - Bottom: Previous, Next, and a "Flag" toggle. On the last question, Next becomes "Finish".
 - Question navigator: a grid of numbers, opened as a drawer on mobile and kept as a sidebar on desktop. Shows answered, unanswered, and flagged.
 - "AI-guessed" badge shown on the question if the answer source is `ai`.
+- "Double check" button under the options, on key-backed questions only, enabled once an answer is picked. It shows whether the answer matches the key and whether OpenAI (asked without seeing the key) agrees, with its reason. The answer then locks for that question.
 
 ### 4. Results
 - Two scores at the top: "Key-backed: 38 / 50" and "All questions: 46 / 60". Hide the first when there are no AI-guessed questions.
@@ -43,6 +44,7 @@ History is a later phase and lives behind a small link on the Upload screen.
 
 ## Visual style
 - Light theme by default, dark theme follows the system setting.
+- A Theme toggle (System / Light / Dark) at the top right of the Upload screen overrides the system setting. It starts on System and is remembered in the browser.
 - System font stack. Base size 16px, comfortable line height for long scenario text.
 - Spacing on a 4px scale. Rounded corners, subtle borders, little or no shadow.
 - Color tokens:
@@ -71,5 +73,5 @@ UploadDropzone, ProgressBar, QuestionCard, OptionButton, AiBadge, QuestionNaviga
 ## Don'ts
 - No login screens, popups, or onboarding tours.
 - No timers or countdowns unless asked for later.
-- No revealing correct answers during the quiz.
+- No revealing correct answers during the quiz, except when the student taps Double check (which locks that answer first).
 - No hidden AI guesses. Every AI-chosen answer is badged.

@@ -13,7 +13,7 @@ A 60-question PDF becomes a scored quiz in a couple of minutes. No screenshots. 
 
 ## Principles
 1. **Save time first.** Every feature must remove repetition. If it doesn't, leave it out.
-2. **Be honest about AI.** If Claude chose an answer, the app says so, every time. A wrong AI guess must never quietly lower or raise a score.
+2. **Be honest about AI.** If the AI chose an answer, the app says so, every time. A wrong AI guess must never quietly lower or raise a score.
 3. **Keep it simple.** Prefer the plain solution. SQLite over a server database. One screen at a time. No accounts, no social features.
 4. **Respect the source.** If a PDF extracts badly, show the problem and let the student fix it on the review screen. Never guess silently.
 5. **Short and calm.** Explanations are a few sentences. Feedback is direct and never scolding.

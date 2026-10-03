@@ -28,3 +28,16 @@ needs_samples = pytest.mark.skipif(
     not (QUIZ_PDF.exists() and KEY_PDF.exists()),
     reason="sample PDFs are not present in data/samples/",
 )
+
+
+@pytest.fixture(autouse=True)
+def no_real_openai(monkeypatch):
+    """Tests must never spend money: hide any real key from backend/.env."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_MODEL", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def temp_database(monkeypatch, tmp_path):
+    """Tests write to a throwaway database, never data/app.db."""
+    monkeypatch.setenv("QUIZ_DB_PATH", str(tmp_path / "test.db"))

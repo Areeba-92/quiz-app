@@ -23,19 +23,19 @@ export function ResultItem({ item, flagged }: Props) {
         )}
       </div>
 
-      <p className="mb-3 whitespace-pre-line text-slate-900 dark:text-slate-100">{item.text}</p>
+      <p className="mb-3 whitespace-pre-line break-words text-slate-900 dark:text-slate-100">{item.text}</p>
 
       <div className="grid gap-2 text-sm">
         <p className="flex items-start gap-2 text-red-700 dark:text-red-300">
           <span aria-hidden="true">&#10007;</span>
-          <span>
+          <span className="min-w-0 break-words">
             <span className="font-medium">Your answer: </span>
             {yours ? `${yours}. ${item.options[yours] ?? ''}` : 'Not answered'}
           </span>
         </p>
         <p className="flex items-start gap-2 text-green-700 dark:text-green-300">
           <span aria-hidden="true">&#10003;</span>
-          <span>
+          <span className="min-w-0 break-words">
             <span className="font-medium">Correct answer: </span>
             {item.correct}. {item.options[item.correct] ?? ''}
           </span>
@@ -43,9 +43,15 @@ export function ResultItem({ item, flagged }: Props) {
       </div>
 
       {item.explanation && (
-        <p className="mt-3 rounded-xl bg-slate-100 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-          {item.explanation}
-        </p>
+        <div className="mt-3 rounded-xl bg-slate-100 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          {/* SOUL.md: be honest about AI. A reason the AI wrote says so. */}
+          {item.explanation_source === 'ai' && (
+            <p className="mb-1 text-xs font-medium text-amber-800 dark:text-amber-300">
+              Explanation written by AI
+            </p>
+          )}
+          <p>{item.explanation}</p>
+        </div>
       )}
     </li>
   )

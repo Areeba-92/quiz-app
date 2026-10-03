@@ -35,7 +35,7 @@ export function QuestionNavigator({ questions, answers, flagged, current, onJump
                   isFlagged ? 'flagged, ' : ''
                 }${answered ? 'answered' : 'not answered'}`}
                 className={[
-                  'relative flex h-10 w-full items-center justify-center rounded-lg border text-sm font-medium',
+                  'relative flex h-11 w-full items-center justify-center rounded-lg border text-sm font-medium',
                   state === 'current'
                     ? 'border-indigo-600 bg-indigo-600 text-white dark:border-indigo-400 dark:bg-indigo-500'
                     : state === 'flagged'

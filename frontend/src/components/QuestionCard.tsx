@@ -5,10 +5,11 @@ import { OptionButton } from './OptionButton'
 interface Props {
   question: Question
   chosen: string | undefined
+  locked?: boolean
   onSelect: (letter: string) => void
 }
 
-export function QuestionCard({ question, chosen, onSelect }: Props) {
+export function QuestionCard({ question, chosen, locked = false, onSelect }: Props) {
   const letters = Object.keys(question.options).sort()
 
   return (
@@ -23,7 +24,7 @@ export function QuestionCard({ question, chosen, onSelect }: Props) {
           </h2>
           {question.answer_source === 'ai' && <AiBadge />}
         </div>
-        <p className="max-h-72 overflow-y-auto whitespace-pre-line text-slate-900 dark:text-slate-100">
+        <p className="max-h-72 overflow-y-auto whitespace-pre-line break-words text-slate-900 dark:text-slate-100">
           {question.text}
         </p>
       </div>
@@ -35,6 +36,7 @@ export function QuestionCard({ question, chosen, onSelect }: Props) {
             letter={letter}
             text={question.options[letter]}
             selected={chosen === letter}
+            locked={locked}
             onSelect={onSelect}
           />
         ))}

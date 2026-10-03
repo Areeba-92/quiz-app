@@ -1,12 +1,20 @@
 @import 'tailwindcss';
 
+/* dark: follows data-theme on <html> (set from the theme toggle, or the system
+   setting when the toggle is on System), not the media query alone. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 @theme {
   /* DESIGN.md: desktop layout starts above 900px. */
   --breakpoint-wide: 900px;
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 html,
@@ -29,11 +37,9 @@ body {
   color: var(--color-slate-900);
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: var(--color-slate-950);
-    color: var(--color-slate-100);
-  }
+[data-theme='dark'] body {
+  background-color: var(--color-slate-950);
+  color: var(--color-slate-100);
 }
 
 /* DESIGN.md: a visible focus outline on every interactive element. */

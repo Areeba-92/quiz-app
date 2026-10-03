@@ -51,14 +51,14 @@ export function UploadDropzone({ label, hint, file, onChange }: Props) {
 
         {file ? (
           <div className="flex items-center justify-between gap-3">
-            <span className="truncate text-sm">{file.name}</span>
+            <span className="min-w-0 truncate text-sm">{file.name}</span>
             <button
               type="button"
               onClick={() => {
                 onChange(null)
                 if (inputRef.current) inputRef.current.value = ''
               }}
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+              className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
             >
               Remove
             </button>
@@ -69,7 +69,7 @@ export function UploadDropzone({ label, hint, file, onChange }: Props) {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+              className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
             >
               Choose file
             </button>

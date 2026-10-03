@@ -13,6 +13,7 @@ function renderResults(props: Partial<Parameters<typeof ResultsScreen>[0]> = {})
       questions={questions}
       result={scoreResponse()}
       flagged={new Set()}
+      onRetry={() => {}}
       onNewQuiz={() => {}}
       {...props}
     />,
@@ -51,6 +52,35 @@ describe('ResultsScreen', () => {
     expect(screen.getByText(/Correct answer:/)).toBeInTheDocument()
     expect(screen.getByText(/A\. alpha/)).toBeInTheDocument()
     expect(screen.getByText('Reason for question 2')).toBeInTheDocument()
+  })
+
+  it('labels a reason the AI wrote, but not one from the key', () => {
+    renderResults()
+    expect(screen.queryByText('Explanation written by AI')).not.toBeInTheDocument()
+  })
+
+  it('labels an AI-written reason for a key-backed answer', () => {
+    renderResults({
+      result: scoreResponse({
+        wrong: [
+          {
+            number: 2,
+            text: 'Scenario for question 2',
+            your_answer: 'B',
+            correct: 'A',
+            options: { A: 'alpha', B: 'beta' },
+            explanation: 'Alpha fits the scenario.',
+            explanation_source: 'ai',
+            answer_source: 'key',
+          },
+        ],
+      }),
+    })
+
+    expect(screen.getByText('Explanation written by AI')).toBeInTheDocument()
+    expect(screen.getByText('Alpha fits the scenario.')).toBeInTheDocument()
+    // The answer itself came from the key, so no AI-guessed badge.
+    expect(screen.queryByText('AI-guessed')).not.toBeInTheDocument()
   })
 
   it('says so plainly when a question was left unanswered', () => {
@@ -118,14 +148,21 @@ describe('ResultsScreen', () => {
     expect(screen.getByText(/could not be marked/)).toBeInTheDocument()
   })
 
-  it('keeps Retry wrong only disabled until phase 7, and starts a new quiz', async () => {
+  it('retries the wrong questions, or starts a new quiz', async () => {
     const user = userEvent.setup()
+    const onRetry = vi.fn()
     const onNewQuiz = vi.fn()
-    renderResults({ onNewQuiz })
+    renderResults({ onRetry, onNewQuiz })
 
-    expect(screen.getByRole('button', { name: 'Retry wrong only' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Retry wrong only (1)' }))
+    expect(onRetry).toHaveBeenCalledOnce()
 
     await user.click(screen.getByRole('button', { name: 'New quiz' }))
     expect(onNewQuiz).toHaveBeenCalledOnce()
+  })
+
+  it('disables Retry wrong only when nothing was wrong', () => {
+    renderResults({ result: scoreResponse({ wrong: [] }) })
+    expect(screen.getByRole('button', { name: 'Retry wrong only' })).toBeDisabled()
   })
 })

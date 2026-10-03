@@ -27,7 +27,8 @@ function Tile({ label, score, hint }: { label: string; score: Score; hint?: stri
 export function ScoreSummary({ scoreKeyOnly, scoreAll, hasAiAnswers }: Props) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      {hasAiAnswers && (
+      {/* Also hidden when nothing came from a key: "0 / 0" tells the student nothing. */}
+      {hasAiAnswers && scoreKeyOnly.total > 0 && (
         <Tile
           label="Key-backed"
           score={scoreKeyOnly}

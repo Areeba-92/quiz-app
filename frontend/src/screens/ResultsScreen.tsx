@@ -8,12 +8,13 @@ interface Props {
   questions: Question[]
   result: ScoreResponse
   flagged: Set<number>
+  onRetry: () => void
   onNewQuiz: () => void
 }
 
 type Tab = 'all' | 'wrong' | 'flagged'
 
-export function ResultsScreen({ title, questions, result, flagged, onNewQuiz }: Props) {
+export function ResultsScreen({ title, questions, result, flagged, onRetry, onNewQuiz }: Props) {
   const [tab, setTab] = useState<Tab>('wrong')
 
   const wrongByNumber = new Map(result.wrong.map((item) => [item.number, item]))
@@ -106,11 +107,11 @@ export function ResultsScreen({ title, questions, result, flagged, onNewQuiz }: 
       <div className="mt-6 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled
-          title="Retrying only the wrong questions arrives in phase 7."
-          className="min-h-11 cursor-not-allowed rounded-xl bg-slate-300 px-4 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+          onClick={onRetry}
+          disabled={result.wrong.length === 0}
+          className="min-h-11 rounded-xl bg-indigo-600 px-4 font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
         >
-          Retry wrong only
+          Retry wrong only{result.wrong.length > 0 && ` (${result.wrong.length})`}
         </button>
         <button
           type="button"

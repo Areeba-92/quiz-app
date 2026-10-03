@@ -42,7 +42,69 @@ def test_blank_page_is_reported_as_scanned_not_skipped_silently():
     assert result.text_pages == 1
     assert [w.code for w in result.warnings] == ["scanned_page"]
     assert result.warnings[0].page == 2
-    assert "phase 4" in result.warnings[0].message
+    assert "OPENAI_API_KEY" in result.warnings[0].message
+
+
+PAGE_ONE = "Q1. A question with enough text to read\nA.  alpha\nB.  beta"
+
+
+def test_scanned_pages_are_transcribed_and_kept_in_page_order():
+    seen = []
+
+    def transcribe(images):
+        seen.extend(images)
+        return [pdf_text.PageText(lines=["Q2. Read from the scan", "A. gamma", "B. delta"])]
+
+    result = pdf_text.extract(make_pdf([PAGE_ONE, "", ]), "quiz.pdf", transcribe)
+
+    assert len(seen) == 1 and seen[0].startswith(b"\x89PNG")
+    assert result.vision_pages == [2]
+    assert result.scanned_pages == [2]
+    assert result.warnings == []
+    assert result.lines.index("Q2. Read from the scan") > result.lines.index(
+        "Q1. A question with enough text to read"
+    )
+
+
+def test_text_pages_are_never_sent_to_the_transcriber():
+    def transcribe(images):
+        raise AssertionError("should not be called")
+
+    result = pdf_text.extract(make_pdf([PAGE_ONE]), "quiz.pdf", transcribe)
+    assert result.vision_pages == []
+
+
+def test_a_failed_transcription_is_reported_and_the_page_skipped():
+    result = pdf_text.extract(
+        make_pdf([PAGE_ONE, ""]), "quiz.pdf", lambda images: ["RateLimitError (HTTP 429)"]
+    )
+
+    assert result.vision_pages == []
+    assert [w.code for w in result.warnings] == ["vision_failed"]
+    assert result.warnings[0].page == 2
+    assert "HTTP 429" in result.warnings[0].message
+
+
+def test_an_unclear_scan_is_kept_but_flagged():
+    result = pdf_text.extract(
+        make_pdf([PAGE_ONE, ""]),
+        "quiz.pdf",
+        lambda images: [pdf_text.PageText(lines=["Q2. Smudged text"], unclear=True)],
+    )
+
+    assert "Q2. Smudged text" in result.lines
+    assert [w.code for w in result.warnings] == ["vision_unclear"]
+
+
+def test_transcribed_text_is_normalised_like_the_text_path():
+    result = pdf_text.extract(
+        make_pdf([PAGE_ONE, ""]),
+        "quiz.pdf",
+        lambda images: [pdf_text.PageText(lines=["  Q2. \u201cQuoted\u201d  ", "", "A. x"])],
+    )
+
+    assert 'Q2. "Quoted"' in result.lines
+    assert "" not in result.lines
 
 
 def test_title_comes_from_the_first_page():

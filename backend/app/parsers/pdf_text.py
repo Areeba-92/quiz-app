@@ -1,10 +1,14 @@
 """PDF bytes -> clean text lines, using PyMuPDF.
 
-Only the text path lives here. Scanned pages are reported, never guessed at;
-the vision path is phase 4.
+Pages with a text layer are read directly. Scanned pages are rendered to images
+and handed to a transcriber (the OpenAI vision call in app/ai.py, passed in by
+the route). Its lines then join the rest, so everything downstream runs the
+same whichever path read a page. With no transcriber, scanned pages are
+reported and skipped, never guessed at.
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import pymupdf
@@ -18,6 +22,10 @@ MIN_TEXT_CHARS = 20
 # Fraction of pages a line must appear on, as a first or last line, to count
 # as a running header or footer.
 BOILERPLATE_RATIO = 0.6
+
+# Resolution scanned pages are rendered at for vision. Enough for small print
+# without making each image needlessly large.
+RENDER_DPI = 150
 
 _TRANSLATIONS = {
     "“": '"',
@@ -44,11 +52,24 @@ class PdfError(Exception):
 
 
 @dataclass
+class PageText:
+    """One scanned page as the transcriber read it."""
+
+    lines: list[str]
+    unclear: bool = False
+
+
+# PNG images in, one result per image out: PageText, or an error message.
+Transcriber = Callable[[list[bytes]], list[PageText | str]]
+
+
+@dataclass
 class ExtractedPdf:
     lines: list[str]
     page_count: int
     text_pages: int
     scanned_pages: list[int] = field(default_factory=list)
+    vision_pages: list[int] = field(default_factory=list)
     title: str = ""
     warnings: list[ParseWarning] = field(default_factory=list)
 
@@ -106,32 +127,64 @@ def _pick_title(first_page: list[str], boilerplate: set[str], fallback: str) -> 
     return fallback
 
 
-def extract(data: bytes, filename: str = "") -> ExtractedPdf:
+def _clean_lines(lines: list[str]) -> list[str]:
+    stripped = (line.strip() for line in normalise("\n".join(lines)).splitlines())
+    return [line for line in stripped if line]
+
+
+def extract(data: bytes, filename: str = "", transcribe: Transcriber | None = None) -> ExtractedPdf:
     doc = _open(data)
     warnings: list[ParseWarning] = []
     scanned: list[int] = []
+    vision: list[int] = []
     pages: list[list[str]] = []
 
     try:
         for index in range(doc.page_count):
             raw = doc[index].get_text("text")
-            page_no = index + 1
             if len(re.sub(r"\s", "", raw)) < MIN_TEXT_CHARS:
-                scanned.append(page_no)
+                scanned.append(index + 1)
+                pages.append([])
+                continue
+            pages.append(_clean_lines(raw.splitlines()))
+
+        if scanned and transcribe is not None:
+            images = [doc[n - 1].get_pixmap(dpi=RENDER_DPI).tobytes("png") for n in scanned]
+            for page_no, result in zip(scanned, transcribe(images)):
+                if isinstance(result, str):
+                    warnings.append(
+                        ParseWarning(
+                            code="vision_failed",
+                            message=f"Scanned page {page_no} could not be read: {result}. It was skipped.",
+                            page=page_no,
+                        )
+                    )
+                    continue
+                pages[page_no - 1] = _clean_lines(result.lines)
+                vision.append(page_no)
+                if result.unclear:
+                    warnings.append(
+                        ParseWarning(
+                            code="vision_unclear",
+                            message=(
+                                f"Parts of scanned page {page_no} were hard to read. "
+                                "Check its questions against the PDF."
+                            ),
+                            page=page_no,
+                        )
+                    )
+        elif scanned:
+            for page_no in scanned:
                 warnings.append(
                     ParseWarning(
                         code="scanned_page",
                         message=(
                             f"Page {page_no} has no selectable text. It was skipped. "
-                            "Scanned pages need the vision path, which is phase 4."
+                            "Add OPENAI_API_KEY and OPENAI_MODEL to backend/.env to read scanned pages."
                         ),
                         page=page_no,
                     )
                 )
-                pages.append([])
-                continue
-            lines = [line.strip() for line in normalise(raw).splitlines()]
-            pages.append([line for line in lines if line])
     finally:
         page_count = doc.page_count
         doc.close()
@@ -152,6 +205,7 @@ def extract(data: bytes, filename: str = "") -> ExtractedPdf:
         page_count=page_count,
         text_pages=page_count - len(scanned),
         scanned_pages=scanned,
+        vision_pages=vision,
         title=title,
         warnings=warnings,
     )

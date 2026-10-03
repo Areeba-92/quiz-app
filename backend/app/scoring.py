@@ -2,7 +2,7 @@
 
 Two scores are always produced. The key-backed score covers only questions
 whose answer came from a real answer key; the overall score adds questions
-answered by Claude. Keeping them apart is the point: a wrong AI guess must
+answered by the AI. Keeping them apart is the point: a wrong AI guess must
 never quietly move the score the student is relying on.
 """
 

@@ -32,6 +32,8 @@ class PageInfo(BaseModel):
     total: int
     text_pages: int
     scanned_pages: list[int] = Field(default_factory=list)
+    # Scanned pages that were read by OpenAI vision. Text from these may hold misreads.
+    vision_pages: list[int] = Field(default_factory=list)
 
 
 class ParseResponse(BaseModel):
@@ -74,3 +76,36 @@ class ScoreResponse(BaseModel):
     wrong: list[WrongAnswer] = Field(default_factory=list)
     # Questions with no correct answer available at all, so they cannot be marked.
     unscored: list[int] = Field(default_factory=list)
+
+
+class QuizCreate(BaseModel):
+    title: str
+    questions: list[Question]
+
+
+class QuizSaved(BaseModel):
+    id: int
+    created_at: str
+
+
+class AttemptCreate(BaseModel):
+    # Question number -> chosen letter, as in ScoreRequest.
+    answers: dict[int, str] = Field(default_factory=dict)
+    # The questions in this attempt. None means the whole quiz; a retry sends
+    # only the numbers it covers.
+    numbers: list[int] | None = None
+
+
+class AttemptResponse(ScoreResponse):
+    attempt_id: int
+    quiz_id: int
+
+
+class CheckRequest(BaseModel):
+    question: Question
+
+
+class CheckResponse(BaseModel):
+    # OpenAI's own pick, made without seeing the key's answer.
+    ai_answer: str
+    ai_reason: str
