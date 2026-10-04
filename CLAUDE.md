@@ -24,6 +24,13 @@ Purpose and values: @SOUL.md UI and UX rules: @DESIGN.md Full plan and build pha
 - Frontend dev: `cd frontend && npm run dev -- --host`
 - Frontend build: `cd frontend && npm run build`
 
+## Deployment
+- Vercel, two projects from `Areeba-92/quiz-app` (branch `main`): root `frontend/` -> https://quiz-app-c1oi.vercel.app, root `backend/` -> https://quiz-app-iota-two-80.vercel.app. A push to main redeploys both.
+- Frontend env: `VITE_API_URL` = backend URL. Every API call goes through `API_BASE` in `frontend/src/api.ts`. Never use bare relative fetch paths.
+- Backend env: `OPENAI_API_KEY`, `OPENAI_MODEL`. Vercel auto-detects `app/main.py`; routes are at the root (no `/api`).
+- New frontend origins must be added to CORS in `backend/app/main.py`.
+- Vercel limits: 4.5 MB request body, 300 s per request (Hobby), only `/tmp` writable (not durable).
+
 ## Structure
 - `backend/app/parsers/` PDF to question JSON (text path and vision path)
 - `backend/app/scoring.py` scoring and answer-key matching
