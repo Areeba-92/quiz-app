@@ -72,6 +72,9 @@ class ExtractedPdf:
     vision_pages: list[int] = field(default_factory=list)
     title: str = ""
     warnings: list[ParseWarning] = field(default_factory=list)
+    # The same clean lines as `lines`, kept per page (index 0 is page 1). Empty
+    # for a page with no usable text. Quiz generation cites pages from this.
+    page_lines: list[list[str]] = field(default_factory=list)
 
 
 def normalise(text: str) -> str:
@@ -190,12 +193,11 @@ def extract(data: bytes, filename: str = "", transcribe: Transcriber | None = No
         doc.close()
 
     boilerplate = _find_boilerplate(pages)
-    body: list[str] = []
-    for lines in pages:
-        for line in lines:
-            if line in boilerplate or _PAGE_NUMBER_RE.match(line):
-                continue
-            body.append(line)
+    page_lines = [
+        [line for line in lines if line not in boilerplate and not _PAGE_NUMBER_RE.match(line)]
+        for lines in pages
+    ]
+    body = [line for lines in page_lines for line in lines]
 
     fallback = filename.rsplit("/", 1)[-1].removesuffix(".pdf") or "Untitled quiz"
     title = _pick_title(pages[0] if pages else [], boilerplate, fallback)
@@ -208,4 +210,5 @@ def extract(data: bytes, filename: str = "", transcribe: Transcriber | None = No
         vision_pages=vision,
         title=title,
         warnings=warnings,
+        page_lines=page_lines,
     )

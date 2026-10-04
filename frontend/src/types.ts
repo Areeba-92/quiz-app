@@ -11,6 +11,10 @@ export interface Question {
   explanation: string | null
   explanation_source: Source | null
   issues: string[]
+  /** Written by the AI from a study PDF. Optional: sessions saved before this field lack it. */
+  generated?: boolean
+  /** The study PDF page a generated question was written from. */
+  source_page?: number | null
 }
 
 export interface ParseWarning {
@@ -50,6 +54,7 @@ export interface WrongAnswer {
   explanation: string | null
   explanation_source: Source | null
   answer_source: Source | null
+  source_page?: number | null
 }
 
 export interface ScoreResponse {
@@ -78,6 +83,36 @@ export interface CheckResult {
 
 /** Question number -> double-check result. A checked question's answer is locked. */
 export type Checks = Record<number, CheckResult>
+
+export type Difficulty = 'easy' | 'medium' | 'hard'
+
+export interface GenerateSettings {
+  numQuestions: number
+  difficulty: Difficulty
+  scenarioBased: boolean
+}
+
+/** A few pages of a study PDF, and how many questions to write from them. */
+export interface GenerateChunk {
+  pages: number[]
+  text: string
+  count: number
+}
+
+export interface GeneratePlan {
+  title: string
+  pages: PageInfo
+  chunks: GenerateChunk[]
+  requested: number
+  planned: number
+  warnings: ParseWarning[]
+}
+
+export interface ChunkResult {
+  questions: Question[]
+  /** Items the AI returned that broke a rule and were dropped. */
+  skipped: number
+}
 
 /** Question number -> chosen letter. Never keyed by list position. */
 export type Answers = Record<number, string>

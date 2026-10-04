@@ -17,6 +17,10 @@ class Question(BaseModel):
     explanation_source: Source | None = None
     # Extraction problems for this question. Feeds the review screen in phase 5.
     issues: list[str] = Field(default_factory=list)
+    # Written by the AI from a study PDF, not read from a quiz PDF.
+    generated: bool = False
+    # The study PDF page a generated question was written from.
+    source_page: int | None = None
 
 
 class ParseWarning(BaseModel):
@@ -58,6 +62,7 @@ class WrongAnswer(BaseModel):
     explanation: str | None = None
     explanation_source: Source | None = None
     answer_source: Source | None = None
+    source_page: int | None = None
 
 
 class ScoreRequest(BaseModel):
@@ -109,3 +114,47 @@ class CheckResponse(BaseModel):
     # OpenAI's own pick, made without seeing the key's answer.
     ai_answer: str
     ai_reason: str
+
+
+Difficulty = Literal["easy", "medium", "hard"]
+
+
+class GenerateChunk(BaseModel):
+    """A few pages of a study PDF, and how many questions to write from them."""
+
+    pages: list[int]
+    text: str
+    count: int
+
+
+class GeneratePlan(BaseModel):
+    title: str
+    pages: PageInfo
+    chunks: list[GenerateChunk]
+    # What was asked for, and what the plan can carry (less for a short PDF).
+    requested: int
+    planned: int
+    warnings: list[ParseWarning] = Field(default_factory=list)
+
+
+class ChunkRequest(BaseModel):
+    pages: list[int] = Field(min_length=1)
+    text: str = Field(min_length=1, max_length=100_000)
+    count: int = Field(ge=1, le=15)
+    difficulty: Difficulty = "medium"
+    scenario_based: bool = False
+
+
+class ChunkResponse(BaseModel):
+    questions: list[Question]
+    # Items the AI returned that broke a rule and were dropped.
+    skipped: int
+
+
+class FinishRequest(BaseModel):
+    title: str
+    pages: PageInfo
+    questions: list[Question]
+    requested: int
+    skipped: int = 0
+    warnings: list[ParseWarning] = Field(default_factory=list)

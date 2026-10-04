@@ -2,6 +2,12 @@ import type {
   Answers,
   AttemptResponse,
   CheckResult,
+  ChunkResult,
+  GenerateChunk,
+  GeneratePlan,
+  GenerateSettings,
+  PageInfo,
+  ParseWarning,
   ParseResponse,
   Question,
   QuizSaved,
@@ -29,13 +35,15 @@ async function failure(response: Response): Promise<Error> {
   return new Error(detail)
 }
 
+function checkUploadSize(size: number, message: string) {
+  if (API_BASE && size > MAX_DEPLOYED_UPLOAD_BYTES) throw new Error(message)
+}
+
 export async function parsePdfs(quiz: File, answerKey: File | null): Promise<ParseResponse> {
-  const size = quiz.size + (answerKey?.size ?? 0)
-  if (API_BASE && size > MAX_DEPLOYED_UPLOAD_BYTES) {
-    throw new Error(
-      'The PDFs are too large to upload. Keep the quiz and answer key under 4 MB together.',
-    )
-  }
+  checkUploadSize(
+    quiz.size + (answerKey?.size ?? 0),
+    'The PDFs are too large to upload. Keep the quiz and answer key under 4 MB together.',
+  )
 
   const form = new FormData()
   form.append('quiz', quiz)
@@ -91,6 +99,59 @@ export async function checkAnswer(question: Question): Promise<CheckResult> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),
+  })
+  if (!response.ok) throw await failure(response)
+  return response.json()
+}
+
+/** Step 1 of generating: read the study PDF and split it into chunks. */
+export async function planQuiz(pdf: File, settings: GenerateSettings): Promise<GeneratePlan> {
+  checkUploadSize(pdf.size, 'The PDF is too large to upload. Keep it under 4 MB.')
+
+  const form = new FormData()
+  form.append('pdf', pdf)
+  form.append('num_questions', String(settings.numQuestions))
+  form.append('difficulty', settings.difficulty)
+  form.append('scenario_based', String(settings.scenarioBased))
+
+  const response = await fetch(`${API_BASE}/generate-quiz`, { method: 'POST', body: form })
+  if (!response.ok) throw await failure(response)
+  return response.json()
+}
+
+/** Step 2: write the questions for one chunk. */
+export async function generateChunk(
+  chunk: GenerateChunk,
+  settings: GenerateSettings,
+): Promise<ChunkResult> {
+  const response = await fetch(`${API_BASE}/generate-quiz/chunk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      pages: chunk.pages,
+      text: chunk.text,
+      count: chunk.count,
+      difficulty: settings.difficulty,
+      scenario_based: settings.scenarioBased,
+    }),
+  })
+  if (!response.ok) throw await failure(response)
+  return response.json()
+}
+
+/** Step 3: de-duplicate and number everything, as a normal parse result. */
+export async function finishQuiz(body: {
+  title: string
+  pages: PageInfo
+  questions: Question[]
+  requested: number
+  skipped: number
+  warnings: ParseWarning[]
+}): Promise<ParseResponse> {
+  const response = await fetch(`${API_BASE}/generate-quiz/finish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   })
   if (!response.ok) throw await failure(response)
   return response.json()

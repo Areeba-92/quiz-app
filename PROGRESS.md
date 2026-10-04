@@ -3,10 +3,10 @@
 ## Current phase
 **All 8 phases are complete** and ticked in PLAN.md. 117 backend and 47 frontend tests pass, and the frontend builds clean.
 **Deployed on Vercel (4 Oct)** and working end to end: frontend https://quiz-app-c1oi.vercel.app, backend https://quiz-app-iota-two-80.vercel.app.
+**Generate quiz from a study PDF (4 Oct)**: built and tested locally (157 backend, 53 frontend tests); real run on the sample, 8 questions, 4 chunks, 12 s. Tested on localhost, pushed to main the same day.
 Real runs on `gpt-6-luna` (3 Oct), all against the 60-question sample:
-- No key: 8 s, 60/60 AI answers matched the real key.
+- No key: 8 s, 60/60 AI answers matched the real key. Letters-only key: 6.6 s, answers untouched, 60/60 AI explanations.
 - Image-only scans of quiz + key (16 pages): 39 s, every stem and option identical to the text path.
-- Letters-only key: 6.6 s, answers untouched, 60/60 AI explanations.
 
 ## Decisions made
 - AI provider is **OpenAI**. Key and `OPENAI_MODEL` live only in `backend/.env`. Never print the key in chat.
@@ -24,6 +24,7 @@ Real runs on `gpt-6-luna` (3 Oct), all against the 60-question sample:
 - Theme toggle (System / Light / Dark) on the Upload screen; `data-theme` on <html> drives Tailwind's `dark:` variant.
 - Tests use a temp database and hide the OpenAI key, so they never touch real data or spend money.
 - Vercel: two projects from one repo (`frontend/`, `backend/`), redeploy on push to main. Frontend calls `VITE_API_URL` via `API_BASE` in `api.ts`; empty in dev, so the Vite proxy is used. Backend routes sit at the root, with no `/api` prefix.
+- Generate: `POST /generate-quiz` (PDF -> chunks of <=4 pages, vision for scanned pages), `/generate-quiz/chunk` (one AI call, invalid JSON retried once, bad items skipped and counted), `/generate-quiz/finish` (stdlib difflib de-dup at 0.85, renumber). The frontend runs 3 chunks at a time. Chosen over job + polling because Vercel keeps no shared state between requests. Max 50 questions, 15 per chunk.
 - CORS allows the production frontend and localhost:5173 only. Vercel preview URLs are blocked.
 - Areeba commits herself, or asks Claude to commit and push.
 
@@ -35,6 +36,5 @@ Real runs on `gpt-6-luna` (3 Oct), all against the 60-question sample:
 - No screen yet lists saved quizzes or attempts; they are only in the database.
 
 ## Next steps
-- Improvement ideas, in recommended order, are in `docs/IDEAS.md`. Tick items there as they are done.
-- First: find why "Grade IX" and "Verifying Your RAG Assistant" were saved with no answers (needs those PDFs in `data/samples/`).
-- Decide on a hosted database if quiz history should be kept online.
+- Generated quizzes: correct letters lean towards A/B (seen in the real run). Shuffling options server-side would fix it. Then: find why "Grade IX" and "Verifying Your RAG Assistant" were saved with no answers (needs those PDFs in `data/samples/`).
+- Decide on a hosted database if quiz history should be kept online. More ideas, in order, are in `docs/IDEAS.md`.

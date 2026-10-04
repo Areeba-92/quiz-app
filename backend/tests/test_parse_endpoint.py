@@ -122,6 +122,8 @@ def test_response_matches_the_documented_schema(client):
         "explanation",
         "explanation_source",
         "issues",
+        "generated",
+        "source_page",
     }
 
 

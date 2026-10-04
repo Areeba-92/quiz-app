@@ -19,6 +19,8 @@ History is a later phase and lives behind a small link on the Upload screen.
 - One primary button: "Build quiz". Disabled until a quiz PDF is chosen.
 - States: idle, uploading, parsing (show progress by page), failed (plain message and a retry button).
 - If scanned pages are detected, show a note: "Scanned pages take longer."
+- A two-way switch at the top: "Quiz PDF" (above) and "Generate quiz from PDF". Generate mode has one drop zone ("Study PDF"), Questions (1-50), Difficulty (Easy / Medium / Hard) and a "Scenario-based questions" checkbox. Button: "Generate quiz". Progress reads "Writing questions: chunk x of y".
+- Generated quizzes always open on the Review screen. Every generated question shows the AI-guessed badge and a "Page N" chip for its source page (in the Review row on wider screens and in its open panel, on the quiz card, and in Results).
 
 ### 2. Review
 - List of all extracted questions, collapsed to one line each. Tap to expand and edit text, options, correct answer.

@@ -57,6 +57,7 @@ def score_attempt(questions: list[Question], answers: dict[int, str]) -> ScoreRe
                     explanation=question.explanation,
                     explanation_source=question.explanation_source,
                     answer_source=question.answer_source,
+                    source_page=question.source_page,
                 )
             )
 

@@ -1,5 +1,6 @@
 import type { Question } from '../types'
 import { AiBadge } from './AiBadge'
+import { SourcePage } from './SourcePage'
 
 interface Props {
   question: Question
@@ -66,6 +67,8 @@ export function ReviewRow({ question, problems, expanded, onToggle, onChange }: 
           {question.text || <em className="text-slate-400">No question text</em>}
         </span>
         {isAi && <AiBadge />}
+        {/* No room on a phone; the open panel shows the page there. */}
+        <SourcePage page={question.source_page} className="hidden sm:inline-block" />
         <span className="shrink-0 rounded-lg border border-slate-300 px-2 text-sm font-medium tabular-nums dark:border-slate-700">
           {question.correct ?? '–'}
           <span className="sr-only">{question.correct ? ' is correct' : ' no answer set'}</span>
@@ -80,6 +83,12 @@ export function ReviewRow({ question, problems, expanded, onToggle, onChange }: 
                 <li key={problem}>{problem}</li>
               ))}
             </ul>
+          )}
+
+          {question.source_page && (
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Written from page {question.source_page} of the study PDF.
+            </p>
           )}
 
           <label className="grid gap-1 text-sm font-medium">

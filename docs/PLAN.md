@@ -26,9 +26,13 @@ Question:
   "correct": "B",
   "answer_source": "key",
   "explanation": "...",
-  "explanation_source": "key"
+  "explanation_source": "key",
+  "issues": [],
+  "generated": false,
+  "source_page": null
 }
 ```
+`generated` and `source_page` are set only on questions the AI wrote from a study PDF (`answer_source` is then always `ai`).
 Quiz: id, title, created_at, questions[]
 Attempt: id, quiz_id, answers{number: letter}, score_key_only, score_all, wrong[]
 

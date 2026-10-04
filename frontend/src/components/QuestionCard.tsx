@@ -1,6 +1,7 @@
 import type { Question } from '../types'
 import { AiBadge } from './AiBadge'
 import { OptionButton } from './OptionButton'
+import { SourcePage } from './SourcePage'
 
 interface Props {
   question: Question
@@ -23,6 +24,7 @@ export function QuestionCard({ question, chosen, locked = false, onSelect }: Pro
             Question {question.number}
           </h2>
           {question.answer_source === 'ai' && <AiBadge />}
+          <SourcePage page={question.source_page} />
         </div>
         <p className="max-h-72 overflow-y-auto whitespace-pre-line break-words text-slate-900 dark:text-slate-100">
           {question.text}

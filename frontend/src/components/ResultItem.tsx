@@ -1,5 +1,6 @@
 import type { WrongAnswer } from '../types'
 import { AiBadge } from './AiBadge'
+import { SourcePage } from './SourcePage'
 
 interface Props {
   item: WrongAnswer
@@ -16,6 +17,7 @@ export function ResultItem({ item, flagged }: Props) {
           Question {item.number}
         </span>
         {item.answer_source === 'ai' && <AiBadge />}
+        <SourcePage page={item.source_page} />
         {flagged && (
           <span className="rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-400">
             &#9873; Flagged
