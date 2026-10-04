@@ -8,6 +8,7 @@ time and then sends everything back to be de-duplicated and numbered.
 """
 
 import math
+import random
 import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -144,6 +145,33 @@ def validate_items(items: list, pages: list[int]) -> tuple[list[Question], int]:
         except ValidationError:
             skipped += 1
     return questions, skipped
+
+
+def shuffle_options(questions: list[Question], rng: random.Random | None = None) -> list[Question]:
+    """Move each correct option to a new letter, spread evenly over A to D.
+
+    Models put the right answer first far too often, which makes a quiz
+    guessable. Across a batch every letter is correct about equally often; the
+    other three options are shuffled around it. Option texts never change.
+    """
+    rng = rng or random.Random()
+    # Whole rounds of A to D, each in a fresh random order, so a batch smaller
+    # than four can land on any letters, not always the first ones.
+    targets: list[str] = []
+    while len(targets) < len(questions):
+        targets += rng.sample(LETTERS, len(LETTERS))
+    targets = targets[: len(questions)]
+
+    shuffled: list[Question] = []
+    for question, target in zip(questions, targets):
+        texts = [question.options[letter] for letter in LETTERS]
+        right = texts.pop(LETTERS.index(question.correct))
+        rng.shuffle(texts)
+        texts.insert(LETTERS.index(target), right)
+        shuffled.append(
+            question.model_copy(update={"options": dict(zip(LETTERS, texts)), "correct": target})
+        )
+    return shuffled
 
 
 def _stem(text: str) -> str:

@@ -3,6 +3,7 @@
 Nothing here calls the real API.
 """
 
+import random
 from types import SimpleNamespace
 
 import httpx
@@ -155,6 +156,57 @@ def test_different_questions_about_one_topic_are_kept():
     kept, removed = generate.dedupe(questions)
     assert removed == 0
     assert len(kept) == 2
+
+
+# --- shuffling ---------------------------------------------------------------
+
+
+def answered(correct: str, number: int = 0) -> Question:
+    texts = {"A": f"first {number}", "B": f"second {number}", "C": f"third {number}", "D": f"fourth {number}"}
+    return generated(f"Question {number}?").model_copy(
+        update={"options": texts, "correct": correct, "number": number}
+    )
+
+
+def test_shuffling_keeps_the_right_answer_and_every_option():
+    before = [answered("A", n) for n in range(8)]
+    after = generate.shuffle_options(before, random.Random(1))
+
+    for old, new in zip(before, after):
+        assert new.options[new.correct] == old.options[old.correct]
+        assert sorted(new.options.values()) == sorted(old.options.values())
+        assert new.text == old.text
+
+
+def test_correct_letters_are_spread_evenly():
+    # The model put every answer on A; afterwards each letter is right twice.
+    after = generate.shuffle_options([answered("A", n) for n in range(8)], random.Random(2))
+    assert sorted(q.correct for q in after) == ["A", "A", "B", "B", "C", "C", "D", "D"]
+
+
+def test_small_batches_reach_every_letter():
+    # Chunks often hold fewer than four questions; D must still come up.
+    seen = set()
+    for seed in range(20):
+        after = generate.shuffle_options([answered("A", n) for n in range(3)], random.Random(seed))
+        assert len({q.correct for q in after}) == 3
+        seen |= {q.correct for q in after}
+    assert seen == {"A", "B", "C", "D"}
+
+
+def test_shuffling_nothing_is_fine():
+    assert generate.shuffle_options([]) == []
+
+
+def test_chunk_endpoint_shuffles(client, configured, monkeypatch):
+    four = [item(question=f"Different question number {n}?") for n in range(4)]
+    monkeypatch.setattr(ai, "generate_questions", lambda *args: four)
+    response = client.post(
+        "/generate-quiz/chunk", json={"pages": [2], "text": "[Page 2]\nText", "count": 4}
+    )
+    questions = response.json()["questions"]
+    assert sorted(q["correct"] for q in questions) == ["A", "B", "C", "D"]
+    assert all(q["options"][q["correct"]] == "Examples" for q in questions)
 
 
 def test_renumber_counts_from_one():

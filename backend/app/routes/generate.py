@@ -110,7 +110,7 @@ async def chunk(request: ChunkRequest) -> ChunkResponse:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     questions, skipped = generate.validate_items(items, request.pages)
-    return ChunkResponse(questions=questions, skipped=skipped)
+    return ChunkResponse(questions=generate.shuffle_options(questions), skipped=skipped)
 
 
 @router.post("/generate-quiz/finish", response_model=ParseResponse)

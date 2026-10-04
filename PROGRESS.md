@@ -24,7 +24,7 @@ Real runs on `gpt-6-luna` (3 Oct), all against the 60-question sample:
 - Theme toggle (System / Light / Dark) on the Upload screen; `data-theme` on <html> drives Tailwind's `dark:` variant.
 - Tests use a temp database and hide the OpenAI key, so they never touch real data or spend money.
 - Vercel: two projects from one repo (`frontend/`, `backend/`), redeploy on push to main. Frontend calls `VITE_API_URL` via `API_BASE` in `api.ts`; empty in dev, so the Vite proxy is used. Backend routes sit at the root, with no `/api` prefix.
-- Generate: `POST /generate-quiz` (PDF -> chunks of <=4 pages, vision for scanned pages), `/generate-quiz/chunk` (one AI call, invalid JSON retried once, bad items skipped and counted), `/generate-quiz/finish` (stdlib difflib de-dup at 0.85, renumber). The frontend runs 3 chunks at a time. Chosen over job + polling because Vercel keeps no shared state between requests. Max 50 questions, 15 per chunk.
+- Generate: `POST /generate-quiz` (PDF -> chunks of <=4 pages, vision for scanned pages), `/generate-quiz/chunk` (one AI call, invalid JSON retried once, bad items skipped and counted), `/generate-quiz/finish` (stdlib difflib de-dup at 0.85, renumber). The frontend runs 3 chunks at a time. Chosen over job + polling because Vercel keeps no shared state between requests. Max 50 questions, 15 per chunk. Options are shuffled server-side so each letter is correct about equally often (the model favoured A/B).
 - CORS allows the production frontend and localhost:5173 only. Vercel preview URLs are blocked.
 - Areeba commits herself, or asks Claude to commit and push.
 
@@ -36,5 +36,5 @@ Real runs on `gpt-6-luna` (3 Oct), all against the 60-question sample:
 - No screen yet lists saved quizzes or attempts; they are only in the database.
 
 ## Next steps
-- Generated quizzes: correct letters lean towards A/B (seen in the real run). Shuffling options server-side would fix it. Then: find why "Grade IX" and "Verifying Your RAG Assistant" were saved with no answers (needs those PDFs in `data/samples/`).
+- Find why "Grade IX" and "Verifying Your RAG Assistant" were saved with no answers (needs those PDFs in `data/samples/`).
 - Decide on a hosted database if quiz history should be kept online. More ideas, in order, are in `docs/IDEAS.md`.

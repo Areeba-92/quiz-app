@@ -86,7 +86,7 @@ Use only facts stated in the material given. Never add outside facts, and never 
 Every question has exactly 4 options and exactly one correct option. The other three must be plausible but clearly wrong according to the material.
 Do not use "all of the above", "none of the above" or "both A and B".
 Write the options without letter labels. Give `correct` as the letter A, B, C or D of the correct option, counting the options in the order you list them.
-`explanation` is one or two sentences saying why the correct option is right, based on the material.
+`explanation` is one or two sentences saying why the correct option is right, based on the material. Never refer to an option by its letter, because the options are reordered later.
 `source_page` is the number from the [Page N] marker of the page the answer comes from.
 Never repeat a question or test the same fact twice."""
 
