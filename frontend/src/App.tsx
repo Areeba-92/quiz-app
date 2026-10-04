@@ -131,7 +131,7 @@ export default function App() {
   const title = quiz && numbers ? `${quiz.title} · retry of ${numbers.length}` : (quiz?.title ?? '')
 
   if (quiz && reviewing) {
-    return <ReviewScreen quiz={quiz} onStart={start} />
+    return <ReviewScreen quiz={quiz} onStart={start} onHome={reset} />
   }
 
   if (quiz && result) {
@@ -167,6 +167,7 @@ export default function App() {
           busy={scoring}
           checks={checks}
           onChecked={checked}
+          onHome={reset}
         />
       </>
     )

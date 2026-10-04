@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { ConfirmStrip } from '../components/ConfirmStrip'
+import { HomeButton } from '../components/HomeButton'
 import { ReviewRow } from '../components/ReviewRow'
 import type { ParseResponse, Question } from '../types'
 
 interface Props {
   quiz: ParseResponse
   onStart: (questions: Question[]) => void
+  onHome?: () => void
 }
 
 // Parser issue codes -> plain words. Unknown codes fall back to the code itself.
@@ -59,7 +62,8 @@ function clean(question: Question): Question {
 
 const SHOWN_WARNINGS = 6
 
-export function ReviewScreen({ quiz, onStart }: Props) {
+export function ReviewScreen({ quiz, onStart, onHome = () => {} }: Props) {
+  const [confirmingHome, setConfirmingHome] = useState(false)
   const [questions, setQuestions] = useState(quiz.questions)
   const [edited, setEdited] = useState<Set<number>>(new Set())
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
@@ -102,7 +106,18 @@ export function ReviewScreen({ quiz, onStart }: Props) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8 pb-28">
+    <main className="mx-auto w-full max-w-3xl px-4 py-6 pb-28">
+      <div className="mb-1">
+        <HomeButton onClick={() => setConfirmingHome(true)} />
+      </div>
+      {confirmingHome && (
+        <ConfirmStrip
+          message="Leave this quiz? The questions read from your PDF, and any edits, will be lost."
+          confirmLabel="Leave"
+          onConfirm={onHome}
+          onCancel={() => setConfirmingHome(false)}
+        />
+      )}
       <p className="truncate text-sm text-slate-500 dark:text-slate-400">{quiz.title}</p>
       <h1 className="text-2xl font-semibold">Review</h1>
       <p className="mt-1 text-slate-600 dark:text-slate-400">

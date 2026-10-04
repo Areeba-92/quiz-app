@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { HomeButton } from '../components/HomeButton'
 import { ResultItem } from '../components/ResultItem'
 import { ScoreSummary } from '../components/ScoreSummary'
 import type { Question, ScoreResponse } from '../types'
@@ -33,7 +34,11 @@ export function ResultsScreen({ title, questions, result, flagged, onRetry, onNe
   ]
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8">
+    <main className="mx-auto w-full max-w-3xl px-4 py-6">
+      {/* The quiz is finished, so going home needs no "are you sure". */}
+      <div className="mb-1">
+        <HomeButton onClick={onNewQuiz} />
+      </div>
       <p className="truncate text-sm text-slate-500 dark:text-slate-400">{title}</p>
       <h1 className="mb-4 text-2xl font-semibold">Results</h1>
 

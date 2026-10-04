@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { ConfirmStrip } from '../components/ConfirmStrip'
+import { HomeButton } from '../components/HomeButton'
 import { ProgressBar } from '../components/ProgressBar'
 import { DoubleCheck } from '../components/DoubleCheck'
 import { QuestionCard } from '../components/QuestionCard'
@@ -16,7 +18,10 @@ interface Props {
   busy?: boolean
   checks?: Checks
   onChecked?: (number: number, result: CheckResult) => void
+  onHome?: () => void
 }
+
+type Confirming = 'home' | 'finish' | null
 
 export function QuizScreen({
   title,
@@ -29,14 +34,24 @@ export function QuizScreen({
   busy = false,
   checks = {},
   onChecked = () => {},
+  onHome = () => {},
 }: Props) {
   const [index, setIndex] = useState(0)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
+  const [confirming, setConfirming] = useState<Confirming>(null)
 
   const question = questions[index]
   const isLast = index === questions.length - 1
   const isFlagged = flagged.has(question.number)
   const answeredCount = questions.filter((q) => answers[q.number] !== undefined).length
+  const unanswered = questions.length - answeredCount
+
+  // Finishing early scores like Finish on the last question: unanswered ones
+  // count as wrong, so "Retry wrong only" brings them back later.
+  function finishNow() {
+    if (unanswered === 0) onFinish()
+    else setConfirming('finish')
+  }
 
   const previous = () => setIndex((value) => Math.max(value - 1, 0))
   const next = () => setIndex((value) => Math.min(value + 1, questions.length - 1))
@@ -70,6 +85,36 @@ export function QuizScreen({
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 pb-40 wide:pb-6">
       <header className="mb-4">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <HomeButton onClick={() => setConfirming('home')} />
+          <button
+            type="button"
+            onClick={finishNow}
+            disabled={busy}
+            className="min-h-11 rounded-xl border border-slate-300 px-3 text-sm font-medium disabled:opacity-40 dark:border-slate-700"
+          >
+            Finish now
+          </button>
+        </div>
+        {confirming === 'home' && (
+          <ConfirmStrip
+            message="Leave this quiz? Your answers will be lost."
+            confirmLabel="Leave"
+            onConfirm={onHome}
+            onCancel={() => setConfirming(null)}
+          />
+        )}
+        {confirming === 'finish' && (
+          <ConfirmStrip
+            message={`${unanswered} ${unanswered === 1 ? 'question is' : 'questions are'} not answered and will count as wrong. "Retry wrong only" brings them back.`}
+            confirmLabel="Finish now"
+            onConfirm={() => {
+              setConfirming(null)
+              onFinish()
+            }}
+            onCancel={() => setConfirming(null)}
+          />
+        )}
         <p className="truncate text-sm text-slate-500 dark:text-slate-400">{title}</p>
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <p className="font-medium tabular-nums">

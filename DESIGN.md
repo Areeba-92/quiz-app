@@ -27,6 +27,7 @@ History is a later phase and lives behind a small link on the Upload screen.
 - Questions with a likely extraction problem (missing option, empty text, no matched answer) get a warning icon and sort to the top.
 - AI-guessed answers show an "AI-guessed" badge and can be overridden with one tap.
 - Primary button: "Start quiz".
+- "Home" top left. Leaving asks first with an inline Leave / Cancel strip, since the read questions and edits would be lost.
 
 ### 3. Quiz
 - One question at a time.
@@ -34,6 +35,7 @@ History is a later phase and lives behind a small link on the Upload screen.
 - Scenario text in a scrollable card, then options A to D as large tappable buttons.
 - Selecting an option highlights it. It does not reveal the answer. Answers are revealed on the Results screen.
 - Bottom: Previous, Next, and a "Flag" toggle. On the last question, Next becomes "Finish".
+- Top: "Home" on the left and "Finish now" on the right. Finish now with unanswered questions first shows an inline strip saying how many will count as wrong (Finish now / Cancel).
 - Question navigator: a grid of numbers, opened as a drawer on mobile and kept as a sidebar on desktop. Shows answered, unanswered, and flagged.
 - "AI-guessed" badge shown on the question if the answer source is `ai`.
 - "Double check" button under the options, on key-backed questions only, enabled once an answer is picked. It shows whether the answer matches the key and whether OpenAI (asked without seeing the key) agrees, with its reason. The answer then locks for that question.
@@ -42,7 +44,7 @@ History is a later phase and lives behind a small link on the Upload screen.
 - Two scores at the top: "Key-backed: 38 / 50" and "All questions: 46 / 60". Hide the first when there are no AI-guessed questions.
 - Filter tabs: All, Wrong, Flagged.
 - Each wrong question shows: your answer, correct answer, short explanation, and the AI-guessed badge when relevant.
-- Primary button: "Retry wrong only". Secondary: "New quiz".
+- Primary button: "Retry wrong only". Secondary: "New quiz". "Home" top left leaves without asking.
 
 ## Visual style
 - Light theme by default, dark theme follows the system setting.
