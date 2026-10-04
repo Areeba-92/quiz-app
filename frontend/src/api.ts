@@ -8,6 +8,13 @@ import type {
   ScoreResponse,
 } from './types'
 
+// The backend host in production (set VITE_API_URL on Vercel). Empty in local
+// dev, so calls stay relative and go through the Vite proxy.
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+
+// Vercel rejects function request bodies over 4.5 MB before the backend sees them.
+const MAX_DEPLOYED_UPLOAD_BYTES = 4 * 1024 * 1024
+
 async function failure(response: Response): Promise<Error> {
   let detail = `Request failed (${response.status}).`
   try {
@@ -16,15 +23,25 @@ async function failure(response: Response): Promise<Error> {
   } catch {
     // A non-JSON error body is not worth reporting over the status code.
   }
+  if (response.status === 413) {
+    detail = 'The PDFs are too large to upload. Keep the quiz and answer key under 4 MB together.'
+  }
   return new Error(detail)
 }
 
 export async function parsePdfs(quiz: File, answerKey: File | null): Promise<ParseResponse> {
+  const size = quiz.size + (answerKey?.size ?? 0)
+  if (API_BASE && size > MAX_DEPLOYED_UPLOAD_BYTES) {
+    throw new Error(
+      'The PDFs are too large to upload. Keep the quiz and answer key under 4 MB together.',
+    )
+  }
+
   const form = new FormData()
   form.append('quiz', quiz)
   if (answerKey) form.append('answer_key', answerKey)
 
-  const response = await fetch('/parse', { method: 'POST', body: form })
+  const response = await fetch(`${API_BASE}/parse`, { method: 'POST', body: form })
   if (!response.ok) throw await failure(response)
   return response.json()
 }
@@ -33,7 +50,7 @@ export async function scoreAttempt(
   questions: Question[],
   answers: Answers,
 ): Promise<ScoreResponse> {
-  const response = await fetch('/score', {
+  const response = await fetch(`${API_BASE}/score`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ questions, answers }),
@@ -44,7 +61,7 @@ export async function scoreAttempt(
 
 /** Save the quiz as it starts, after any review edits. */
 export async function saveQuiz(title: string, questions: Question[]): Promise<QuizSaved> {
-  const response = await fetch('/quizzes', {
+  const response = await fetch(`${API_BASE}/quizzes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, questions }),
@@ -59,7 +76,7 @@ export async function submitAttempt(
   answers: Answers,
   numbers: number[],
 ): Promise<AttemptResponse> {
-  const response = await fetch(`/quizzes/${quizId}/attempts`, {
+  const response = await fetch(`${API_BASE}/quizzes/${quizId}/attempts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ answers, numbers }),
@@ -70,7 +87,7 @@ export async function submitAttempt(
 
 /** Ask OpenAI for its own answer to one question, as a second opinion on the key. */
 export async function checkAnswer(question: Question): Promise<CheckResult> {
-  const response = await fetch('/check', {
+  const response = await fetch(`${API_BASE}/check`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),

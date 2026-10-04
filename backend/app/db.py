@@ -38,7 +38,13 @@ CREATE TABLE IF NOT EXISTS attempts (
 
 def _path() -> Path:
     # Overridable so tests never touch the real database.
-    return Path(os.environ.get("QUIZ_DB_PATH", DEFAULT_PATH))
+    if "QUIZ_DB_PATH" in os.environ:
+        return Path(os.environ["QUIZ_DB_PATH"])
+    # On Vercel only /tmp is writable, and it is wiped between instances, so
+    # stored quizzes there are best-effort, not durable.
+    if os.environ.get("VERCEL"):
+        return Path("/tmp/app.db")
+    return DEFAULT_PATH
 
 
 def _connect() -> sqlite3.Connection:

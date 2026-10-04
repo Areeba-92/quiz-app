@@ -10,10 +10,12 @@ from app.routes.score import router as score_router
 
 app = FastAPI(title="Quiz PDF App", version="0.1.0")
 
-# The Vite dev server, which under WSL may be reached on either host.
+# The deployed frontend, plus the Vite dev server, which under WSL may be
+# reached on either host. The middleware also answers OPTIONS preflights.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://quiz-app-c1oi.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],

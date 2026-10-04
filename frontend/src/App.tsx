@@ -89,11 +89,15 @@ export default function App() {
     setScoring(true)
     setError('')
     try {
-      setResult(
-        quizId !== null
-          ? await submitAttempt(quizId, answers, inPlay.map((q) => q.number))
-          : await scoreAttempt(inPlay, answers),
-      )
+      let scored = null
+      if (quizId !== null) {
+        // Storing is a bonus: if the saved quiz is gone (serverless storage is
+        // not durable), still score the attempt, just without storing it.
+        scored = await submitAttempt(quizId, answers, inPlay.map((q) => q.number)).catch(
+          () => null,
+        )
+      }
+      setResult(scored ?? (await scoreAttempt(inPlay, answers)))
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Scoring failed.')
     } finally {
